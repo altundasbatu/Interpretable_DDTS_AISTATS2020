@@ -1,4 +1,5 @@
 # Created by Andrew Silva on 8/28/19
+import os
 import gym
 import numpy as np
 import torch
@@ -21,7 +22,8 @@ def run_episode(q, agent_in, ENV_NAME, seed=0):
         raise Exception('No valid environment selected')
     done = False
     torch.manual_seed(seed)
-    env.seed(seed)
+    env.reset(seed=seed)
+    # env.seed(seed)
     np.random.seed(seed)
     env.action_space.seed(seed)
     random.seed(seed)
@@ -30,7 +32,8 @@ def run_episode(q, agent_in, ENV_NAME, seed=0):
     while not done:
         action = agent.get_action(state)
         # Step through environment using chosen action
-        state, reward, done, _ = env.step(action)
+        # print(env.step(action))
+        state, reward, done, _, _ = env.step(action)
         # env.render()
         # Save reward
         agent.save_reward(reward)
@@ -55,6 +58,9 @@ def run_episode(q, agent_in, ENV_NAME, seed=0):
 
 
 def main(episodes, agent, ENV_NAME):
+    model_folder = '../models'
+    if not os.path.exists(model_folder):
+        os.makedirs(model_folder)
     running_reward_array = []
     for episode in range(episodes):
         reward = 0
@@ -63,14 +69,14 @@ def main(episodes, agent, ENV_NAME):
         running_reward_array.append(returned_object[0])
         agent.replay_buffer.extend(returned_object[1])
         if reward >= 499:
-            agent.save('../models/'+str(episode)+'th')
+            agent.save(os.path.join(model_folder, f"{episode}th"))
         agent.end_episode(reward)
 
         running_reward = sum(running_reward_array[-100:]) / float(min(100.0, len(running_reward_array)))
         if episode % 50 == 0:
             print(f'Episode {episode}  Last Reward: {reward}  Average Reward: {running_reward}')
         if episode % 500 == 0:
-            agent.save('../models/'+str(episode)+'th')
+            agent.save(os.path.join(model_folder, f"{episode}th"))
 
     return running_reward_array
 

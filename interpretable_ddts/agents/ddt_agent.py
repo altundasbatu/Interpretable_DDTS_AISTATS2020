@@ -100,6 +100,10 @@ class DDTAgent:
 
     def get_action(self, observation):
         with torch.no_grad():
+            print(observation)
+            # if the observation is a tuple
+            if isinstance(observation, tuple):
+                observation = observation[0]
             obs = torch.Tensor(observation)
             obs = obs.view(1, -1)
             self.last_state = obs
@@ -141,7 +145,10 @@ class DDTAgent:
     def end_episode(self, reward):
         value_loss, action_loss = self.ppo.batch_updates(self.replay_buffer, self)
         self.num_steps += 1
-        bot_name = '../txts/' + self.bot_name
+        folder = '../txts'
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        bot_name = os.path.join(folder, self.bot_name)
         with open(bot_name + '_rewards.txt', 'a') as myfile:
             myfile.write(str(reward) + '\n')
 
